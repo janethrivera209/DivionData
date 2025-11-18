@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Análisis y División Dataset NSL-KDD</title>
+  <style>
+    :root {
+      --primary-color: #3f51b5; /* Azul Índigo */
+      --secondary-color: #f44336; /* Rojo */
+      --background-light: #eceff1; /* Gris Azulado Claro */
+      --background-dark: #ffffff;
+      --text-dark: #263238; /* Gris Azulado Oscuro */
+      --text-light: #ffffff;
+      --border-color: #cfd8dc;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--background-light);
+      margin: 0;
+      padding: 30px;
+      text-align: center;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    .main-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--background-dark);
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-top: 5px solid var(--primary-color);
+    }
+
+    h1 {
+      color: var(--primary-color);
+      font-size: 28px;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .subtitle {
+      color: #607d8b;
+      margin-bottom: 25px;
+      font-size: 16px;
+    }
+
+    /* --- Formulario de Carga --- */
+    .upload-section {
+      padding: 20px;
+      background-color: #e8eaf6; /* Un poco más oscuro que el fondo */
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border: 1px dashed var(--primary-color);
+    }
+
+    form {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+
+    input[type="file"] {
+      border: 2px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 5px;
+      background: var(--background-dark);
+      cursor: pointer;
+      font-size: 14px;
+      flex-grow: 1; /* Permite que ocupe más espacio */
+      max-width: 350px;
+    }
+    
+    input[type="file"]::file-selector-button {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      margin-right: 15px;
+      transition: background-color 0.2s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background-color: #303f9f; /* Un tono más oscuro */
+    }
+
+    button {
+      padding: 10px 20px;
+      background: var(--secondary-color);
+      color: var(--text-light);
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      text-transform: uppercase;
+    }
+
+    button:hover {
+      background: #d32f2f;
+    }
+    
+    /* --- Sección de Gráficas --- */
+    h2 {
+      color: var(--text-dark);
+      margin-top: 30px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: 500;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .graphs-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around; 
+      gap: 25px;
+      padding: 10px 0;
+    }
+
+    .graph-card {
+      background: var(--background-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      width: calc(50% - 25px); 
+      padding: 15px;
+      transition: transform 0.2s ease;
+    }
+
+    .graph-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .graph-card h4 {
+      margin: 5px 0 15px 0;
+      color: var(--primary-color);
+      font-size: 16px;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .graph-card img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .graph-empty {
+      background: #f1f8e9;
+      border: 2px dashed #a5d6a7;
+      color: #388e3c;
+      border-radius: 8px;
+      padding: 20px;
+      width: calc(50% - 25px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .graph-card, .graph-empty {
+        width: 100%; 
+      }
+      form {
+        flex-direction: column;
+      }
+      input[type="file"] {
+        max-width: 100%;
+      }
+      button {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1>Análisis del Dataset </h1>
+    <p class="subtitle">Cargue su archivo ARFF</p>
+
+    <div class="upload-section">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="file" accept=".arff" required>
+        <button type="submit"> Procesar</button>
+      </form>
+    </div>
+
+    {% if graphs %}
+      <div class="graphs-grid">
+        {% for g, title in graphs %}
+          {% if g %}
+            <div class="graph-card">
+              <h4>{{ title }}</h4>
+              <img src="data:image/png;base64,{{ g }}" alt="Gráfica de {{ title }}">
+            </div>
+          {% else %}
+            <div class="graph-empty">
+              {{ title }} - No disponible o error en la generación.
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    {% if not graphs and request.method == "POST" %}
+    <div class="upload-section" style="border-color: var(--secondary-color); background-color: #ffebee;">
+        <p style="color: var(--secondary-color); font-weight: bold;">⚠️ Error: El archivo ARFF se cargó, pero no se generaron gráficas. Verifique el formato de los datos.</p>
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>
